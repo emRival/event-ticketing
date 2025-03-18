@@ -2,6 +2,7 @@ import 'package:device_preview/device_preview.dart';
 import 'package:event_ticketing/provider/data_qr_provider.dart';
 import 'package:event_ticketing/screens/auth/login_page.dart';
 import 'package:event_ticketing/screens/dashboard/dashboard_page.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -15,10 +16,13 @@ void main() async {
 
   runApp(
     DevicePreview(
-      // jika di web, ubah menjadi true
-      enabled: true,
+      isToolbarVisible:
+          !(defaultTargetPlatform == TargetPlatform.iOS ||
+              defaultTargetPlatform == TargetPlatform.android),
       defaultDevice: Devices.ios.iPhone13ProMax,
-      devices: [Devices.ios.iPhone13ProMax],
+      enabled:
+          !(defaultTargetPlatform == TargetPlatform.iOS ||
+              defaultTargetPlatform == TargetPlatform.android),
       builder:
           (context) => ChangeNotifierProvider(
             create: (context) => DataQrProvider(),
@@ -34,6 +38,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      useInheritedMediaQuery: true,
       locale: DevicePreview.locale(context),
       builder: DevicePreview.appBuilder,
       debugShowCheckedModeBanner: false,
