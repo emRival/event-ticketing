@@ -1,3 +1,4 @@
+import 'package:device_preview/device_preview.dart';
 import 'package:event_ticketing/provider/data_qr_provider.dart';
 import 'package:event_ticketing/screens/auth/login_page.dart';
 import 'package:event_ticketing/screens/dashboard/dashboard_page.dart';
@@ -13,9 +14,16 @@ void main() async {
   await Hive.openBox('settings'); // Buka box settings
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => DataQrProvider(),
-      child: MainApp(),
+    DevicePreview(
+      // jika di web, ubah menjadi true
+      enabled: true,
+      defaultDevice: Devices.ios.iPhone13ProMax,
+      devices: [Devices.ios.iPhone13ProMax],
+      builder:
+          (context) => ChangeNotifierProvider(
+            create: (context) => DataQrProvider(),
+            child: MainApp(),
+          ),
     ),
   );
 }
@@ -26,6 +34,9 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      locale: DevicePreview.locale(context),
+      builder: DevicePreview.appBuilder,
+      debugShowCheckedModeBanner: false,
       home: FutureBuilder(
         future: Future.wait([Hive.openBox('settings')]),
         // Pastikan box sudah terbuka
