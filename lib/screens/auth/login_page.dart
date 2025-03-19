@@ -39,11 +39,14 @@ class LoginPageState extends State<LoginPage> {
                   TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
+                      labelStyle: TextStyle(color: Colors.blueAccent),
+
                       labelText: 'Email',
                       border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blueAccent),
                         borderRadius: BorderRadius.circular(10.0),
                       ),
-                      prefixIcon: Icon(Icons.email),
+                      prefixIcon: Icon(Icons.email, color: Colors.blueAccent),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
@@ -86,6 +89,7 @@ class LoginPageState extends State<LoginPage> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
                       padding: EdgeInsets.symmetric(
                         vertical: 15.0,
                         horizontal: 80.0,
@@ -94,7 +98,11 @@ class LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(10.0),
                       ),
                     ),
-                    child: Text('Login', style: TextStyle(fontSize: 18.0)),
+
+                    child: Text(
+                      'Login',
+                      style: TextStyle(fontSize: 18.0, color: Colors.white),
+                    ),
                   ),
                 ],
               ),

@@ -41,6 +41,7 @@ class _DashboardPageState extends State<DashboardPage> {
         title: Text('Dashboard'),
         automaticallyImplyLeading: false,
         elevation: 0,
+        scrolledUnderElevation: 0,
         backgroundColor: Colors.white,
         centerTitle: true,
         actions: [
@@ -59,7 +60,9 @@ class _DashboardPageState extends State<DashboardPage> {
         future: futureTickets,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.blueAccent),
+            );
           } else if (snapshot.hasError) {
             return Center(
               child: Padding(
@@ -163,6 +166,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                 },
                               ),
                             ),
+                          const SizedBox(height: 5),
                         ],
                       ),
                 ),

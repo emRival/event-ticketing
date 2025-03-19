@@ -96,25 +96,92 @@ class _SettingScreenState extends State<SettingScreen> {
   }
 
   Future<void> _logout() async {
-    // Hapus semua data di Hive
-    await Hive.box('settings').clear();
-    var ticketsBox = await Hive.openBox<HiveGetTicketingResponse>('tickets');
-    await ticketsBox.clear();
+    await showDialog(
+      context: context,
+      builder:
+          (context) => StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                backgroundColor: Colors.white,
+                icon: const Icon(Icons.warning, color: Colors.red),
+                title: const Text('Konfirmasi Logout'),
+                content: Text(
+                  'Apakah Anda yakin ingin logout? Pastikan data telah ter-posting.',
+                  textAlign: TextAlign.start,
+                ),
+                actions: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        onPressed: () async {
+                          setState(() {
+                            isPosting = true;
+                          });
+                          await _postData();
+                          setState(() {
+                            isPosting = false;
+                          });
+                        },
+                        child:
+                            isPosting
+                                ? SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.blueAccent,
+                                  ),
+                                )
+                                : const Text('Post Data'),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          // Hapus semua data di Hive
+                          await Hive.box('settings').clear();
+                          var ticketsBox =
+                              await Hive.openBox<HiveGetTicketingResponse>(
+                                'tickets',
+                              );
+                          await ticketsBox.clear();
 
-    // Navigasi ke halaman login
-    Navigator.pushReplacement(
-      // ignore: use_build_context_synchronously
-      context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
+                          // Navigasi ke halaman login
+                          Navigator.pushReplacement(
+                            // ignore: use_build_context_synchronously
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LoginPage(),
+                            ),
+                          );
+                        },
+                        child: const Text('Logout'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Batal'),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text("Pengaturan"),
-        actions: [IconButton(icon: Icon(Icons.logout), onPressed: _logout)],
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout, color: Colors.red),
+            onPressed: _logout,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -168,8 +235,80 @@ class _SettingScreenState extends State<SettingScreen> {
               isLoading
                   ? CircularProgressIndicator()
                   : ElevatedButton(
-                    onPressed: _refreshData,
-                    child: Text("Re-Generate Data"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade700,
+                    ),
+                    onPressed: () async {
+                      await showDialog(
+                        context: context,
+                        builder:
+                            (context) => StatefulBuilder(
+                              builder: (context, setState) {
+                                return AlertDialog(
+                                  backgroundColor: Colors.white,
+                                  icon: const Icon(
+                                    Icons.warning,
+                                    color: Colors.red,
+                                  ),
+                                  title: const Text('Konfirmasi'),
+                                  content: Text(
+                                    'Apakah Anda yakin ingin memperbarui data? Data yang sudah ada akan dihapus.\n\nPastikan anda telah post data terlebih dahulu.',
+                                    textAlign: TextAlign.start,
+                                  ),
+                                  actions: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        TextButton(
+                                          onPressed: () async {
+                                            setState(() {
+                                              isLoading = true;
+                                            });
+                                            await _postData();
+                                            setState(() {
+                                              isLoading = false;
+                                            });
+                                          },
+                                          child:
+                                              isLoading
+                                                  ? SizedBox(
+                                                    height: 20,
+                                                    width: 20,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                          color:
+                                                              Colors.blueAccent,
+                                                        ),
+                                                  )
+                                                  : const Text('Post Data'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            _refreshData();
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: const Text('Perbarui Data'),
+                                        ),
+
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.of(context).pop(),
+                                          child: const Text('Batal'),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                      );
+                    },
+                    child: Text(
+                      "Re-Generate Data",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
               const SizedBox(height: 20),
               Text(
@@ -181,8 +320,14 @@ class _SettingScreenState extends State<SettingScreen> {
               isPosting
                   ? CircularProgressIndicator()
                   : ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent.shade700,
+                    ),
                     onPressed: _postData,
-                    child: Text("Post Data To API"),
+                    child: Text(
+                      "Post Data To API",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
             ],
           ),
