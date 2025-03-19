@@ -48190,7 +48190,7 @@ s=p}while(true)switch(s){case 0:f=t.Eu
 s=3
 return A.T($.iy().l1("tickets",f),$async$nz)
 case 3:e=a0
-d=A.hL("https://script.google.com/macros/s/AKfycbzvL71wbVA29_BABAwXCq6WXkvNFIJ50yga5BtwSfY0ewkfDwrFjulzrrsTcxbHciJvYA/exec?email="+a)
+d=A.hL("https://apiwisudaidn.vercel.app/api?email="+a)
 p=5
 s=8
 return A.T(A.aR4(d,null),$async$nz)
@@ -48245,7 +48245,7 @@ return A.R($async$nz,r)},
 rT(a){return this.atc(a)},
 atc(a8){var s=0,r=A.S(t.a),q,p=2,o=[],n,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3,a4,a5,a6,a7
 var $async$rT=A.N(function(a9,b0){if(a9===1){o.push(b0)
-s=p}while(true)switch(s){case 0:a4=A.hL("https://script.google.com/macros/s/AKfycbzvL71wbVA29_BABAwXCq6WXkvNFIJ50yga5BtwSfY0ewkfDwrFjulzrrsTcxbHciJvYA/exec")
+s=p}while(true)switch(s){case 0:a4=A.hL("https://apiwisudaidn.vercel.app/api")
 s=3
 return A.T($.iy().l1("tickets",t.Eu),$async$rT)
 case 3:a5=b0

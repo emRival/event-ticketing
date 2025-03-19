@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 
 class GetTicketServices {
   final String baseUrl =
-      'https://script.google.com/macros/s/AKfycbzvL71wbVA29_BABAwXCq6WXkvNFIJ50yga5BtwSfY0ewkfDwrFjulzrrsTcxbHciJvYA/exec';
+      'https://apiwisudaidn.vercel.app/api';
 
   // Fungsi untuk mengambil data dari Hive (jika tersedia) atau API
   Future<List<HiveGetTicketingResponse>> getTickets({
