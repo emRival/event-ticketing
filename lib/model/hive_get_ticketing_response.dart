@@ -35,9 +35,9 @@ class HiveGetTicketingResponse extends HiveObject {
     this.kelas,
     this.panitia,
     this.status = false, // Default false jika null
-    this.issend = false, // Default false jika null
+    bool? issend, // Default false jika status tidak true
     this.jamKedatangan,
-  });
+  }) : issend = issend ?? (status ? true : false);
 
   factory HiveGetTicketingResponse.fromJson(Map<String, dynamic> json) {
     return HiveGetTicketingResponse(
@@ -53,7 +53,15 @@ class HiveGetTicketingResponse extends HiveObject {
                   ? false
                   : json['status']),
       // Pastikan boolean tidak null
-      issend: json['issend'] ?? false,
+      issend:
+          json['issend'] ??
+                  (json['status'] is bool
+                      ? json['status']
+                      : (json['status'].toString().trim().isEmpty
+                          ? false
+                          : json['status']))
+              ? true
+              : false,
       jamKedatangan: json['jam_kedatangan'],
     );
   }

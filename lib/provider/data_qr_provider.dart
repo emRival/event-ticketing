@@ -33,6 +33,17 @@ class DataQrProvider with ChangeNotifier {
   String get searchQuery => _searchQuery;
   List<HiveGetTicketingResponse> get qrDataList => _qrDataBox.values.toList();
 
+  // total unredeemed
+  int get totalUnredeemed =>
+      qrDataList.where((qr) => !qr.status).toList().length;
+
+  // total redeemed
+  int get totalRedeemed => qrDataList.where((qr) => qr.status).toList().length;
+
+  // total issend
+  int get totalIssend =>
+      qrDataList.where((qr) => qr.issend == true).toList().length;
+
   // Setters
   set setSearchQuery(String value) {
     _searchQuery = value;
@@ -141,6 +152,7 @@ class DataQrProvider with ChangeNotifier {
       orElse: () => HiveGetTicketingResponse(),
     );
     foundQR.status = false;
+    foundQR.issend = false;
     foundQR.jamKedatangan = '';
     await foundQR.save();
     scanStatus = 'QR Code Unredeemed Successfully!';

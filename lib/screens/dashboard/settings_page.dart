@@ -1,8 +1,10 @@
 import 'package:event_ticketing/model/hive_get_ticketing_response.dart';
 import 'package:event_ticketing/network/get_ticket_services.dart';
+import 'package:event_ticketing/provider/data_qr_provider.dart';
 import 'package:event_ticketing/screens/auth/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
@@ -189,6 +191,97 @@ class _SettingScreenState extends State<SettingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: SizedBox(
+                  height: 100,
+                  child: Consumer<DataQrProvider>(
+                    builder:
+                        (context, provider, child) => Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              width: 110,
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade100,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.cancel_outlined,
+                                    color: Colors.red,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    provider.getQrDataListNotRedeemed.length
+                                        .toString(),
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              width: 110,
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade100,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.check_circle_outline,
+                                    color: Colors.green,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    provider.getQrDataListRedeemed.length
+                                        .toString(),
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              width: 110,
+                              decoration: BoxDecoration(
+                                color: Colors.blueAccent.shade100,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.cloud_circle_outlined,
+                                    color: Colors.blueAccent,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    provider.totalIssend.toString(),
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                  ),
+                ),
+              ),
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(
