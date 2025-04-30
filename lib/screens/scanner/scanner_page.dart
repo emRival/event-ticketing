@@ -142,11 +142,11 @@ class ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
                               ),
                               _rowDetail(
                                 'Nama',
-                                qrProvider.scannedData!.nama ?? '-',
+                                qrProvider.scannedData!.nama,
                               ),
                               _rowDetail(
                                 'Cabang',
-                                qrProvider.scannedData!.cabang ?? '-',
+                                qrProvider.scannedData!.cabang,
                               ),
                               if (qrProvider.scannedData!.jam != null &&
                                   qrProvider.scannedData!.jam!.isNotEmpty)

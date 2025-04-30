@@ -51485,11 +51485,7 @@ if(r!=null){q=j.r
 if(B.e.q(q,"Invalid"))q=B.hn
 else q=B.e.q(q,k)?B.pD:B.la
 r=r.b
-r=A.aIh("No Kursi",r==null?"-":r)
-p=j.f.c
-p=A.aIh("Nama",p)
-o=j.f.d
-r=A.a([r,p,A.aIh("Cabang",o)],g)
+r=A.a([A.aIh("No Kursi",r==null?"-":r),A.aIh("Nama",j.f.c),A.aIh("Cabang",j.f.d)],g)
 p=j.f.e
 if(p.length!==0)r.push(A.aIh("Jam",p))
 r.push(B.hL)

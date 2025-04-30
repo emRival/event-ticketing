@@ -1,7 +1,5 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:event_ticketing/provider/data_qr_provider.dart';
-import 'package:event_ticketing/screens/auth/login_page.dart';
-import 'package:event_ticketing/screens/dashboard/dashboard_page.dart';
 import 'package:event_ticketing/screens/splashscreen/splash_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

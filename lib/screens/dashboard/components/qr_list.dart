@@ -3,7 +3,7 @@ import 'package:event_ticketing/screens/dashboard/components/qrcode_item.dart';
 import 'package:event_ticketing/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:qr_flutter/qr_flutter.dart';
+
 
 class QRList extends StatelessWidget {
   final List<HiveGetTicketingResponse> qrList;

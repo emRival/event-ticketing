@@ -61,4 +61,4 @@ For any inquiries or support, please contact:
 - 📸 **Instagram**: [@em_rival](https://instagram.com/em_rival)
 - 🎥 **YouTube**: [@em_rival](https://youtube.com/@em_rival)
 
-![🎓](assets/git/image1.png) ![🎫](assets/git/image2.png) ![📱](assets/git/image3.png) ![✨](assets/git/image4.png)
+![🎓](assets/git/image1.jpeg) ![🎫](assets/git/image2.jpeg) ![📱](assets/git/image3.jpeg) ![✨](assets/git/image4.jpeg)
