@@ -28,6 +28,9 @@ class HiveGetTicketingResponse extends HiveObject {
   @HiveField(7)
   String? jamKedatangan;
 
+  @HiveField(8)
+  String? nokursi;
+
   HiveGetTicketingResponse({
     this.id,
     this.cabang,
@@ -37,6 +40,7 @@ class HiveGetTicketingResponse extends HiveObject {
     this.status = false, // Default false jika null
     bool? issend, // Default false jika status tidak true
     this.jamKedatangan,
+    this.nokursi,
   }) : issend = issend ?? (status ? true : false);
 
   factory HiveGetTicketingResponse.fromJson(Map<String, dynamic> json) {
@@ -46,6 +50,7 @@ class HiveGetTicketingResponse extends HiveObject {
       nama: json['nama'],
       kelas: json['kelas'],
       panitia: json['panitia'],
+      nokursi: json['no_kursi'],
       status:
           json['status'] is bool
               ? json['status']
@@ -82,6 +87,7 @@ class HiveGetTicketingResponse extends HiveObject {
       'status': status,
       'issend': issend,
       'jam_kedatangan': jamKedatangan,
+      'no_kursi': nokursi,
     };
   }
 }

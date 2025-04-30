@@ -20,12 +20,14 @@ class HiveGetTicketingResponseAdapter
     return HiveGetTicketingResponse(
       id: fields[0] as String?,
       cabang: fields[1] as String?,
+
       nama: fields[2] as String?,
       kelas: fields[3] as String?,
       panitia: fields[4] as String?,
       status: fields[5] as bool,
       issend: fields[6] as bool?,
       jamKedatangan: fields[7] as String?,
+      nokursi: fields[8] as String?,
     );
   }
 
@@ -48,7 +50,9 @@ class HiveGetTicketingResponseAdapter
       ..writeByte(6)
       ..write(obj.issend)
       ..writeByte(7)
-      ..write(obj.jamKedatangan);
+      ..write(obj.jamKedatangan)
+      ..writeByte(8)
+      ..write(obj.nokursi);
   }
 
   @override

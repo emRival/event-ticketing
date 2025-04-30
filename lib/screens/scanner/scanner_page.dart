@@ -17,6 +17,7 @@ class ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   late QRViewController controller;
   Timer? _clearDataTimer; // Timer untuk menghapus data
+  bool isFlashOn = false;
 
   @override
   void initState() {
@@ -65,27 +66,48 @@ class ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
         children: [
           Expanded(
             flex: 4,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: (controller) {
-                this.controller = controller;
-                controller.scannedDataStream.listen((scanData) {
-                  if (scanData.code != null) {
-                    // ignore: use_build_context_synchronously
-                    context.read<DataQrProvider>().processScannedQR(
-                      scanData.code!,
-                    );
-                    _resetClearDataTimer(); // Reset timer setiap kali ada scan baru
-                  }
-                });
-              },
-              overlay: QrScannerOverlayShape(
-                borderColor: Colors.blueAccent,
-                borderRadius: 10,
-                borderLength: 30,
-                borderWidth: 10,
-                cutOutSize: MediaQuery.of(context).size.width * 0.8,
-              ),
+            child: Stack(
+              children: [
+                QRView(
+                  key: qrKey,
+                  onQRViewCreated: (controller) {
+                    this.controller = controller;
+                    controller.scannedDataStream.listen((scanData) {
+                      if (scanData.code != null) {
+                        context.read<DataQrProvider>().processScannedQR(
+                          scanData.code!,
+                        );
+                        _resetClearDataTimer();
+                      }
+                    });
+                  },
+                  overlay: QrScannerOverlayShape(
+                    borderColor: Colors.blueAccent,
+                    borderRadius: 10,
+                    borderLength: 30,
+                    borderWidth: 10,
+                    cutOutSize: MediaQuery.of(context).size.width * 0.8,
+                  ),
+                ),
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: IconButton(
+                    icon: Icon(
+                      isFlashOn ? Icons.flash_on : Icons.flash_off,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                    onPressed: () async {
+                      await controller.toggleFlash();
+                      bool? flashStatus = await controller.getFlashStatus();
+                      setState(() {
+                        isFlashOn = flashStatus ?? false;
+                      });
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
           // Bagian tampilan hasil scan tetap sama
@@ -114,7 +136,7 @@ class ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'ID: ${qrProvider.scannedData!.id}',
+                                'No Kursi: ${qrProvider.scannedData!.nokursi}',
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,

@@ -101,6 +101,7 @@ class DataQrProvider with ChangeNotifier {
       showRedeemButton = false;
       scannedData = ScannedData(
         id: code,
+        nokursi: foundQR.nokursi,
         nama: foundQR.nama ?? 'Nama',
         cabang: foundQR.cabang ?? 'Cabang',
         jam: foundQR.jamKedatangan?.split(' ')[1] ?? '-',
@@ -110,6 +111,7 @@ class DataQrProvider with ChangeNotifier {
       showRedeemButton = true;
       scannedData = ScannedData(
         id: code,
+        nokursi: foundQR.nokursi,
         nama: foundQR.nama ?? 'Nama',
         cabang: foundQR.cabang ?? 'Cabang',
         jam: '-',
@@ -163,12 +165,14 @@ class DataQrProvider with ChangeNotifier {
 
 class ScannedData {
   final String id;
+  final String? nokursi;
   final String nama;
   final String cabang;
   final String? jam;
 
   ScannedData({
     required this.id,
+    this.nokursi,
     required this.nama,
     required this.cabang,
     this.jam,

@@ -5,8 +5,7 @@ import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 
 class GetTicketServices {
-  final String baseUrl =
-      'https://apiwisudaidn.vercel.app/api';
+  final String baseUrl = 'https://apiwisudaidn.vercel.app/api';
 
   // Fungsi untuk mengambil data dari Hive (jika tersedia) atau API
   Future<List<HiveGetTicketingResponse>> getTickets({

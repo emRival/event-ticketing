@@ -101,7 +101,7 @@ class QRList extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'ID: ${qr.id}\nCabang: ${qr.cabang}',
+                            'No Kursi: ${qr.nokursi}\nCabang: ${qr.cabang}',
                             style: const TextStyle(fontSize: 14),
                           ),
                         ],
@@ -159,7 +159,7 @@ class QRList extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _detailItem('ID', qr.id),
+                  _detailItem('No Kursi', qr.nokursi),
                   _detailItem('Nama', qr.nama),
                   _detailItem('Kelas', qr.kelas),
                   _detailItem('Cabang', qr.cabang),
