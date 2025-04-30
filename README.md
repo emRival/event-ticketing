@@ -1,49 +1,64 @@
+# 🎓✨ IDN Boarding School Graduation Ticket Scanner 🎫📱
 
-# Event Ticketing Application
+## 🌟 Overview
+The **IDN Boarding School Graduation Ticket Scanner** is a Flutter-based mobile application designed to streamline the ticket scanning process for graduation events. This application integrates with Google Spreadsheet API for data management and utilizes Hive for local storage. It is capable of functioning offline after a successful login and can synchronize data with the API once an internet connection is available.
 
-## Overview
-This application is designed to streamline the process of managing and selling tickets for events. It provides a user-friendly interface for both event organizers and attendees.
+## 🚀 Features
+- 🔍 **Ticket Scanning**: Efficiently scan and validate graduation tickets.
+- 📴 **Offline Mode**: Operates seamlessly without an internet connection after login.
+- 📂 **Local Storage**: Uses Hive for secure and fast local data storage.
+- 🔄 **Data Synchronization**: Automatically pushes data to the Google Spreadsheet API when a network connection is restored.
+- 🔒 **User Authentication**: Ensures secure access to the application.
 
-## Features
-- **Event Creation**: Organizers can create and manage events.
-- **Ticket Sales**: Users can purchase tickets online.
-- **QR Code Generation**: Each ticket comes with a unique QR code for easy check-in.
-- **User Authentication**: Secure login and registration for users.
-- **Payment Integration**: Supports multiple payment gateways.
-- **Spreadsheet API Integration**: Manage events and tickets using data from a spreadsheet.
+## 🛠️ Technology Stack
+- 🖥️ **Flutter**: Cross-platform framework for building the application.
+- ☁️ **Google Spreadsheet API**: For cloud-based data storage and management.
+- 🐝 **Hive**: Lightweight and fast local database for offline functionality.
 
-## Installation
-1. Clone the repository:
+## 📋 How It Works
+1. 🔑 **Login**: Users log in to the application to authenticate and download necessary data for offline use.
+2. 🎥 **Ticket Scanning**: The app scans tickets using the device's camera and validates them against the local database.
+3. 📴 **Offline Mode**: All scanned data is stored locally in Hive when offline.
+4. 🔄 **Data Synchronization**: Once the device is online, the app automatically pushes the locally stored data to the Google Spreadsheet API.
+
+## 🛠️ Installation
+1. 📥 Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/event_ticketing.git
+    git clone https://github.com/emRival/event-ticketing.git
     ```
-2. Navigate to the project directory:
+2. 📂 Navigate to the project directory:
     ```bash
     cd event_ticketing
     ```
-3. Install dependencies:
+3. 📦 Install dependencies:
     ```bash
-    npm install
+    flutter pub get
     ```
-4. Start the application:
+4. ▶️ Run the application:
     ```bash
-    npm start
+    flutter run
     ```
 
-## Usage
-1. Register or log in to your account.
-2. Create a new event or browse existing events.
-3. Purchase tickets and receive them via email.
-4. Use the QR code on your ticket for event entry.
-5. Manage events and tickets using the integrated spreadsheet API.
+## 📖 Usage
+1. 🔑 Log in using your credentials.
+2. 🎥 Start scanning tickets using the camera.
+3. 📊 View scanned ticket data in the app.
+4. 🌐 Ensure the device connects to the internet periodically to synchronize data with the Google Spreadsheet API.
 
-## Contributing
-We welcome contributions! Please read our [contributing guidelines](CONTRIBUTING.md) for more details.
+## 📋 Requirements
+- 🛠️ Flutter SDK
+- 📱 Android/iOS device or emulator
+- 🌐 Internet connection (for initial login and data synchronization)
 
-## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+## 🤝 Contributing
+Contributions are welcome! Please fork the repository and submit a pull request with your changes.
 
-## Contact
-For any inquiries, please contact us at support@eventticketing.com.
+## 📜 License
+This project is licensed under the [MIT License](LICENSE).
 
-# event-ticketing
+## 📞 Contact
+For any inquiries or support, please contact:
+- 📸 **Instagram**: [@em_rival](https://instagram.com/em_rival)
+- 🎥 **YouTube**: [@em_rival](https://youtube.com/@em_rival)
+
+![🎓](assets/git/image1.png) ![🎫](assets/git/image2.png) ![📱](assets/git/image3.png) ![✨](assets/git/image4.png)

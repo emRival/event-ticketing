@@ -44,30 +44,25 @@ class HiveGetTicketingResponse extends HiveObject {
   }) : issend = issend ?? (status ? true : false);
 
   factory HiveGetTicketingResponse.fromJson(Map<String, dynamic> json) {
+    final rawStatus = json['status'];
+    final parsedStatus =
+        (rawStatus is bool)
+            ? rawStatus
+            : rawStatus.toString().toLowerCase() == 'true';
+
     return HiveGetTicketingResponse(
       id: json['id'],
       cabang: json['cabang'],
       nama: json['nama'],
       kelas: json['kelas'],
       panitia: json['panitia'],
-      nokursi: json['no_kursi'],
-      status:
-          json['status'] is bool
-              ? json['status']
-              : (json['status'].toString().trim().isEmpty
-                  ? false
-                  : json['status']),
-      // Pastikan boolean tidak null
+      status: parsedStatus,
       issend:
-          json['issend'] ??
-                  (json['status'] is bool
-                      ? json['status']
-                      : (json['status'].toString().trim().isEmpty
-                          ? false
-                          : json['status']))
-              ? true
-              : false,
+          json['issend'] is bool
+              ? json['issend']
+              : parsedStatus, // fallback ke status
       jamKedatangan: json['jam_kedatangan'],
+      nokursi: json['no_kursi'],
     );
   }
 

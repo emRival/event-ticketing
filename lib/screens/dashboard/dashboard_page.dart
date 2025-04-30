@@ -25,6 +25,9 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     fetchTickets();
+    WidgetsBinding.instance.endOfFrame.then((_) {
+      setState(() {});
+    });
   }
 
   void fetchTickets() {

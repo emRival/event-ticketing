@@ -1,5 +1,8 @@
 import 'package:event_ticketing/model/hive_get_ticketing_response.dart';
+import 'package:event_ticketing/screens/dashboard/components/qrcode_item.dart';
+import 'package:event_ticketing/utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class QRList extends StatelessWidget {
@@ -15,20 +18,17 @@ class QRList extends StatelessWidget {
       itemBuilder: (context, index) {
         var qr = qrList[index];
         return Dismissible(
-          key: Key(qr.id!), // Key unik untuk setiap item
+          key: Key(qr.id ?? index.toString()),
           direction:
               qr.status
-                  ? DismissDirection
-                      .endToStart // Hanya swipe ke kiri untuk unredeem
-                  : DismissDirection
-                      .startToEnd, // Hanya swipe ke kanan untuk redeem
+                  ? DismissDirection.endToStart
+                  : DismissDirection.startToEnd,
           background: _buildSwipeBackground(qr.status),
           secondaryBackground: _buildSwipeBackground(
             qr.status,
             isSecondary: true,
           ),
           confirmDismiss: (direction) async {
-            // Konfirmasi sebelum melakukan redeem/unredeem
             return await showDialog(
               context: context,
               builder:
@@ -51,15 +51,14 @@ class QRList extends StatelessWidget {
             );
           },
           onDismissed: (direction) {
-            if (onEdit != null) {
-              onEdit!(qr.id!); // Panggil fungsi onEdit untuk update status
+            if (onEdit != null && qr.id != null) {
+              onEdit!(qr.id!);
             }
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Tiket ${qr.nama} telah ${!qr.status ? 'unredeemed' : 'redeemed'}',
+                  'Tiket ${qr.nama ?? '-'} telah ${!qr.status ? 'unredeemed' : 'redeemed'}',
                 ),
-                duration: const Duration(seconds: 2),
               ),
             );
           },
@@ -93,16 +92,27 @@ class QRList extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            qr.nama!,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
+                            qr.nama ?? '-',
+                            style: GoogleFonts.poppins(
                               fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            'No Kursi: ${qr.nokursi}\nCabang: ${qr.cabang}',
-                            style: const TextStyle(fontSize: 14),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: [
+                              _buildBadge(
+                                'No Kursi: ${qr.nokursi ?? '-'}',
+                                Colors.blue,
+                              ),
+                              _buildBadge(
+                                'Cabang: ${qr.cabang ?? '-'}',
+                                getCabangColor(qr.cabang),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -122,20 +132,61 @@ class QRList extends StatelessWidget {
     );
   }
 
-  // Widget untuk latar belakang swipe
   Widget _buildSwipeBackground(bool status, {bool isSecondary = false}) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
-        color: status ? Colors.orange : Colors.green,
+        gradient: LinearGradient(
+          colors:
+              status
+                  ? [Colors.orangeAccent, Colors.deepOrange]
+                  : [Colors.greenAccent, Colors.green],
+        ),
         borderRadius: BorderRadius.circular(15),
       ),
       alignment: isSecondary ? Alignment.centerRight : Alignment.centerLeft,
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Icon(
-        isSecondary ? Icons.close : Icons.check,
-        color: Colors.white,
-        size: 30,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isSecondary ? Icons.close : Icons.check,
+            color: Colors.white,
+            size: 28,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            isSecondary ? 'Unredeem' : 'Redeem',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        border: Border.all(color: color, width: 1),
+        borderRadius: BorderRadius.circular(50),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -143,143 +194,188 @@ class QRList extends StatelessWidget {
   void _showDetails(BuildContext context, HiveGetTicketingResponse qr) {
     showDialog(
       context: context,
+      barrierDismissible: false, // agar hanya bisa ditutup dari tombol
       builder:
-          (context) => AlertDialog(
+          (context) => Dialog(
+            backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            title: const Center(
-              child: Text(
-                'Detail Tiket',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _detailItem('No Kursi', qr.nokursi),
-                  _detailItem('Nama', qr.nama),
-                  _detailItem('Kelas', qr.kelas),
-                  _detailItem('Cabang', qr.cabang),
-                  _statusItem(qr.status),
-                  if (qr.status)
-                    _detailItem(
-                      'Jam Kedatangan',
-                      qr.jamKedatangan != null
-                          ? (qr.jamKedatangan!.split(' ').length > 1
-                              ? qr.jamKedatangan!.split(' ')[1]
-                              : '-')
-                          : '-',
-                    ),
-
-                  _detailItem('Is Send', qr.issend.toString()),
-                  const SizedBox(height: 15),
-                  Center(
-                    child: Container(
-                      width: 160,
-                      height: 160,
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 8,
-                            spreadRadius: 2,
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 24,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 10),
+                        Center(
+                          child: Text(
+                            '🎟 Detail Tiket',
+                            style: GoogleFonts.poppins(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blueAccent,
+                            ),
                           ),
-                        ],
-                      ),
-                      child: QrImageView(
-                        data: qr.id!,
-                        version: QrVersions.auto,
-                        size: 160.0,
-                      ),
+                        ),
+                        const SizedBox(height: 20),
+                        _infoItem('No Kursi', qr.nokursi),
+                        _infoItem('Nama', qr.nama),
+                        _infoItem('Kelas', qr.kelas),
+                        _infoItem('Cabang', qr.cabang),
+                        _infoItem(
+                          'Status',
+                          qr.status ? 'Redeemed' : 'Unredeemed',
+                        ),
+                        if (qr.status)
+                          _infoItem('Jam Kedatangan', qr.jamKedatangan ?? '-'),
+                        _infoItem(
+                          'Is Send',
+                          qr.issend == true ? 'Ya' : 'Tidak',
+                        ),
+                        _infoItem(
+                          'Warna Gelang',
+                          '',
+                          getCabangColor(qr.cabang),
+                        ),
+                        const SizedBox(height: 20),
+                        Center(
+                          child: Container(
+                            width: 160,
+                            height: 160,
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 10,
+                                  offset: Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                         child: QRListItem(qr: qr),
+
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            ElevatedButton.icon(
+                              icon: Icon(
+                                qr.status ? Icons.undo : Icons.check_circle,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    qr.status
+                                        ? Colors.grey[700]
+                                        : Colors.blueAccent,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: () => _confirmAction(context, qr),
+                              label: Text(
+                                qr.status ? 'Unredeem' : 'Redeem',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            OutlinedButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Colors.grey),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                'Tutup',
+                                style: GoogleFonts.poppins(fontSize: 15),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+
+                // ⛔️ Tombol X di pojok kanan atas
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(color: Colors.black12, blurRadius: 5),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 24),
+                      onPressed: () => Navigator.of(context).pop(),
+                      splashRadius: 20,
+                      tooltip: 'Tutup',
+                    ),
+                  ),
+                ),
+              ],
             ),
-            actions: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                    ),
-                    onPressed: () => _confirmAction(context, qr),
-                    child: Text(
-                      qr.status ? 'Unredeem' : 'Redeem',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Tutup', style: TextStyle(fontSize: 16)),
-                  ),
-                ],
-              ),
-            ],
           ),
     );
   }
 
-  Widget _detailItem(String label, String? value) {
+  Widget _infoItem(String label, String? value, [Color? color]) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: RichText(
-        text: TextSpan(
-          style: const TextStyle(color: Colors.black, fontSize: 16),
-          children: [
-            TextSpan(
-              text: '$label: ',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color:Colors.grey[800],
             ),
-            TextSpan(text: value ?? '-'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _statusItem(bool status) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: RichText(
-        text: TextSpan(
-          style: const TextStyle(color: Colors.black, fontSize: 16),
-          children: [
-            const TextSpan(
-              text: 'Status: ',
-              style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 2),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: color ?? Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
             ),
-            TextSpan(
-              text: status ? 'Redeemed' : 'Unredeemed',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: status ? Colors.green : Colors.red,
-              ),
+            child: Text(
+              value ?? '-',
+              style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -303,9 +399,7 @@ class QRList extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  if (onEdit != null) {
-                    onEdit!(qr.id!);
-                  }
+                  if (onEdit != null && qr.id != null) onEdit!(qr.id!);
                   Navigator.of(context).pop();
                   Navigator.of(context).pop();
                 },

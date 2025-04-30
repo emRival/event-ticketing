@@ -63,7 +63,13 @@ class DataQrProvider with ChangeNotifier {
   // Filtered Lists
   List<HiveGetTicketingResponse> get getQrDataListNotRedeemed =>
       qrDataList
-          .where((qr) => !qr.status && qr.nama!.contains(_searchQuery))
+          .where(
+            (qr) =>
+                !qr.status &&
+                (qr.nama ?? '').toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ),
+          )
           .toList();
 
   List<HiveGetTicketingResponse> get getQrDataListRedeemed =>

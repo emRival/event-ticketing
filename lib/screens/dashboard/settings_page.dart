@@ -3,55 +3,51 @@ import 'package:event_ticketing/network/get_ticket_services.dart';
 import 'package:event_ticketing/provider/data_qr_provider.dart';
 import 'package:event_ticketing/screens/auth/login_page.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
 class SettingScreen extends StatefulWidget {
-  const SettingScreen({super.key});
+  const SettingScreen({Key? key}) : super(key: key);
 
   @override
   State<SettingScreen> createState() => _SettingScreenState();
 }
 
 class _SettingScreenState extends State<SettingScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _lastSyncController = TextEditingController();
-  final TextEditingController _lastDataPostController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _lastSyncController = TextEditingController();
+  final _lastPostController = TextEditingController();
 
   bool isLoading = false;
   bool isPosting = false;
   String statusMessage = "Tekan tombol di bawah untuk memperbarui data.";
   String statusPostMessage = "Tekan tombol di bawah untuk mengirim data.";
-  Color statusMessageColor = Colors.black;
-  Color statusPostMessageColor = Colors.black;
-  var lastSync = Hive.box(
-    'settings',
-  ).get('lastSync', defaultValue: "Belum ada data");
-  var email = Hive.box('settings').get('email', defaultValue: "Belum ada data");
-  var lastDataPost = Hive.box(
-    'settings',
-  ).get('lastDataPost', defaultValue: "Belum ada data");
+  Color statusMessageColor = Colors.black87;
+  Color statusPostMessageColor = Colors.black87;
+
+  late String email;
+  late String lastSync;
+  late String lastDataPost;
 
   @override
   void initState() {
     super.initState();
-    _loadSettings();
-  }
-
-  void _loadSettings() {
+    var box = Hive.box('settings');
+    email = box.get('email', defaultValue: "Belum ada data");
+    lastSync = box.get('lastSync', defaultValue: "Belum ada data");
+    lastDataPost = box.get('lastDataPost', defaultValue: "Belum ada data");
     _emailController.text = email;
     _lastSyncController.text = lastSync;
-    _lastDataPostController.text =
-        lastDataPost; // Ganti dengan data yang sesuai
+    _lastPostController.text = lastDataPost;
   }
 
   Future<void> _refreshData() async {
     setState(() {
       isLoading = true;
       statusMessage = "Mengambil data terbaru...";
-      statusMessageColor = Colors.black;
+      statusMessageColor = Colors.black87;
     });
-
     try {
       await GetTicketServices().refreshTickets(email: _emailController.text);
       setState(() {
@@ -63,26 +59,23 @@ class _SettingScreenState extends State<SettingScreen> {
         statusMessage = "Gagal memperbarui data: $e";
         statusMessageColor = Colors.red;
       });
+    } finally {
+      setState(() => isLoading = false);
     }
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
   Future<void> _postData() async {
     setState(() {
       isPosting = true;
       statusPostMessage = "Mengirim data ke API...";
-      statusPostMessageColor = Colors.black;
+      statusPostMessageColor = Colors.black87;
     });
-
     try {
       var response = await GetTicketServices().postTickets(
         email: _emailController.text,
       );
       setState(() {
-        statusPostMessage = response['message'];
+        statusPostMessage = response['message'] ?? "Berhasil mengirim data";
         statusPostMessageColor = Colors.green;
       });
     } catch (e) {
@@ -90,341 +83,246 @@ class _SettingScreenState extends State<SettingScreen> {
         statusPostMessage = "Gagal mengirim data: $e";
         statusPostMessageColor = Colors.red;
       });
+    } finally {
+      setState(() => isPosting = false);
     }
-
-    setState(() {
-      isPosting = false;
-    });
   }
 
   Future<void> _logout() async {
     await showDialog(
       context: context,
-      builder:
-          (context) => StatefulBuilder(
-            builder: (context, setState) {
-              return AlertDialog(
-                backgroundColor: Colors.white,
-                icon: const Icon(Icons.warning, color: Colors.red),
-                title: const Text('Konfirmasi Logout'),
-                content: Text(
-                  'Apakah Anda yakin ingin logout? Pastikan data telah ter-posting.',
-                  textAlign: TextAlign.start,
-                ),
-                actions: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextButton(
-                        onPressed: () async {
-                          setState(() {
-                            isPosting = true;
-                          });
-                          await _postData();
-                          setState(() {
-                            isPosting = false;
-                          });
-                        },
-                        child:
-                            isPosting
-                                ? SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.blueAccent,
-                                  ),
-                                )
-                                : const Text('Post Data'),
-                      ),
-                      TextButton(
-                        onPressed: () async {
-                          // Hapus semua data di Hive
-                          await Hive.box('settings').clear();
-                          var ticketsBox =
-                              await Hive.openBox<HiveGetTicketingResponse>(
-                                'tickets',
-                              );
-                          await ticketsBox.clear();
-
-                          // Navigasi ke halaman login
-                          Navigator.pushReplacement(
-                            // ignore: use_build_context_synchronously
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => LoginPage(),
-                            ),
-                          );
-                        },
-                        child: const Text('Logout'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Batal'),
-                      ),
-                    ],
-                  ),
-                ],
+      builder: (context) => AlertDialog(
+        title: Text('Konfirmasi Logout', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        content: Text(
+          'Pastikan data sudah di-posting sebelum logout. Apakah ingin keluar sekarang?',
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              _showRefreshDialog();
+            },
+            child: Text('Perbarui Data', style: GoogleFonts.poppins()),
+          ),
+          TextButton(
+            onPressed: () async {
+              await Hive.box('settings').clear();
+              var ticketsBox = await Hive.openBox<HiveGetTicketingResponse>('tickets');
+              await ticketsBox.clear();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => LoginPage()),
               );
             },
+            child: Text('Logout', style: GoogleFonts.poppins(color: Colors.redAccent)),
           ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Batal', style: GoogleFonts.poppins()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRefreshDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Konfirmasi Perbarui', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+        content: Text(
+          'Data lama akan dihapus. Pastikan data sudah di-posting sebelumnya.',
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _postData();
+            },
+            child: Text('Post Data', style: GoogleFonts.poppins()),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _refreshData();
+            },
+            child: Text('Perbarui', style: GoogleFonts.poppins(color: Colors.green)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Batal', style: GoogleFonts.poppins()),
+          ),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: Text("Pengaturan"),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        centerTitle: true,
+        title: Text(
+          'Pengaturan',
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: theme.primaryColor,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout, color: Colors.red),
+            icon: Icon(Icons.logout, color: Colors.redAccent),
             onPressed: _logout,
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: SizedBox(
-                  height: 100,
-                  child: Consumer<DataQrProvider>(
-                    builder:
-                        (context, provider, child) => Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              width: 110,
-                              decoration: BoxDecoration(
-                                color: Colors.red.shade100,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.cancel_outlined,
-                                    color: Colors.red,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    provider.getQrDataListNotRedeemed.length
-                                        .toString(),
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              width: 110,
-                              decoration: BoxDecoration(
-                                color: Colors.green.shade100,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.check_circle_outline,
-                                    color: Colors.green,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    provider.getQrDataListRedeemed.length
-                                        .toString(),
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              width: 110,
-                              decoration: BoxDecoration(
-                                color: Colors.blueAccent.shade100,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.cloud_circle_outlined,
-                                    color: Colors.blueAccent,
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    provider.totalIssend.toString(),
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Consumer<DataQrProvider>(
+              builder: (context, provider, _) => Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildStatCard(
+                    'Unredeemed',
+                    provider.getQrDataListNotRedeemed.length.toString(),
+                    Icons.cancel_outlined,
+                    Colors.redAccent,
                   ),
+                  const SizedBox(width: 12),
+                  _buildStatCard(
+                    'Redeemed',
+                    provider.getQrDataListRedeemed.length.toString(),
+                    Icons.check_circle_outline,
+                    Colors.green,
+                  ),
+                  const SizedBox(width: 12),
+                  _buildStatCard(
+                    'Sent',
+                    provider.totalIssend.toString(),
+                    Icons.cloud_circle_outlined,
+                    theme.primaryColor,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Akun', style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 12),
+                    _buildReadOnlyField('Email', _emailController, Icons.email),
+                    const SizedBox(height: 16),
+                    _buildReadOnlyField('Last Sync', _lastSyncController, Icons.sync),
+                    const SizedBox(height: 16),
+                    _buildReadOnlyField('Last Post', _lastPostController, Icons.cloud_upload),
+                  ],
                 ),
               ),
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  prefixIcon: Icon(Icons.email),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                enabled: false,
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _lastSyncController,
-                decoration: InputDecoration(
-                  enabled: false,
-                  labelText: 'Last Data Sync',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  prefixIcon: Icon(Icons.timeline_rounded),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _lastDataPostController,
-                decoration: InputDecoration(
-                  enabled: false,
-                  labelText: 'Last Data Post',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                  prefixIcon: Icon(Icons.cloud_upload),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                statusMessage,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: statusMessageColor),
-              ),
-              const SizedBox(height: 20),
-              isLoading
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade700,
-                    ),
-                    onPressed: () async {
-                      await showDialog(
-                        context: context,
-                        builder:
-                            (context) => StatefulBuilder(
-                              builder: (context, setState) {
-                                return AlertDialog(
-                                  backgroundColor: Colors.white,
-                                  icon: const Icon(
-                                    Icons.warning,
-                                    color: Colors.red,
-                                  ),
-                                  title: const Text('Konfirmasi'),
-                                  content: Text(
-                                    'Apakah Anda yakin ingin memperbarui data? Data yang sudah ada akan dihapus.\n\nPastikan anda telah post data terlebih dahulu.',
-                                    textAlign: TextAlign.start,
-                                  ),
-                                  actions: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        TextButton(
-                                          onPressed: () async {
-                                            setState(() {
-                                              isLoading = true;
-                                            });
-                                            await _postData();
-                                            setState(() {
-                                              isLoading = false;
-                                            });
-                                          },
-                                          child:
-                                              isLoading
-                                                  ? SizedBox(
-                                                    height: 20,
-                                                    width: 20,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                          strokeWidth: 2,
-                                                          color:
-                                                              Colors.blueAccent,
-                                                        ),
-                                                  )
-                                                  : const Text('Post Data'),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            _refreshData();
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: const Text('Perbarui Data'),
-                                        ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              statusMessage,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(color: statusMessageColor),
+            ),
+            const SizedBox(height: 12),
+            _buildActionButton(
+              'Re-Generate Data',
+              _showRefreshDialog,
+              isLoading: isLoading,
+              color: Colors.green,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              statusPostMessage,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(color: statusPostMessageColor),
+            ),
+            const SizedBox(height: 12),
+            _buildActionButton(
+              'Post Data To API',
+              _postData,
+              isLoading: isPosting,
+              color: theme.primaryColor,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                                        TextButton(
-                                          onPressed:
-                                              () => Navigator.of(context).pop(),
-                                          child: const Text('Batal'),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                      );
-                    },
-                    child: Text(
-                      "Re-Generate Data",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-              const SizedBox(height: 20),
+  Widget _buildStatCard(String label, String count, IconData icon, Color color) {
+    return Expanded(
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        elevation: 3,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          child: Column(
+            children: [
+              Icon(icon, size: 28, color: color),
+              const SizedBox(height: 8),
               Text(
-                statusPostMessage,
-                style: TextStyle(color: statusPostMessageColor),
-                textAlign: TextAlign.center,
+                count,
+                style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 20),
-              isPosting
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent.shade700,
-                    ),
-                    onPressed: _postData,
-                    child: Text(
-                      "Post Data To API",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
+              const SizedBox(height: 4),
+              Text(label, style: GoogleFonts.poppins()),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildReadOnlyField(String label, TextEditingController controller, IconData icon) {
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      style: GoogleFonts.poppins(),
+    );
+  }
+
+  Widget _buildActionButton(String text, VoidCallback onPressed, {bool isLoading = false, required Color color}) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: isLoading
+            ? SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              )
+            : Text(
+                text,
+                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+              ),
       ),
     );
   }

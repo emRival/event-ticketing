@@ -20,11 +20,10 @@ class HiveGetTicketingResponseAdapter
     return HiveGetTicketingResponse(
       id: fields[0] as String?,
       cabang: fields[1] as String?,
-
       nama: fields[2] as String?,
       kelas: fields[3] as String?,
       panitia: fields[4] as String?,
-      status: fields[5] as bool,
+      status: (fields[5] as bool?) ?? false, // ✅ Perbaikan utama
       issend: fields[6] as bool?,
       jamKedatangan: fields[7] as String?,
       nokursi: fields[8] as String?,
@@ -34,7 +33,7 @@ class HiveGetTicketingResponseAdapter
   @override
   void write(BinaryWriter writer, HiveGetTicketingResponse obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)

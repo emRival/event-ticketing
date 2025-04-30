@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:event_ticketing/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
@@ -44,7 +45,7 @@ class ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
 
   void _resetClearDataTimer() {
     _clearDataTimer?.cancel(); // Hentikan timer sebelumnya
-    _clearDataTimer = Timer(const Duration(seconds: 5), () {
+    _clearDataTimer = Timer(const Duration(seconds: 20), () {
       if (mounted) {
         context.read<DataQrProvider>().clearScannedData();
       }
@@ -112,7 +113,7 @@ class ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
           ),
           // Bagian tampilan hasil scan tetap sama
           Expanded(
-            flex: 2,
+            flex: 3,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: SingleChildScrollView(
@@ -135,36 +136,49 @@ class ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'No Kursi: ${qrProvider.scannedData!.nokursi}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              _rowDetail(
+                                'No Kursi',
+                                qrProvider.scannedData!.nokursi ?? '-',
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Nama: ${qrProvider.scannedData!.nama}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              _rowDetail(
+                                'Nama',
+                                qrProvider.scannedData!.nama ?? '-',
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Cabang: ${qrProvider.scannedData!.cabang}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              _rowDetail(
+                                'Cabang',
+                                qrProvider.scannedData!.cabang ?? '-',
                               ),
-                              if (qrProvider.scannedData!.jam!.isNotEmpty)
-                                const SizedBox(height: 8),
-                              Text(
-                                'Jam: ${qrProvider.scannedData!.jam}',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                              if (qrProvider.scannedData!.jam != null &&
+                                  qrProvider.scannedData!.jam!.isNotEmpty)
+                                _rowDetail(
+                                  'Jam',
+                                  qrProvider.scannedData!.jam ?? '-',
+                                ),
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: getCabangColor(
+                                    qrProvider.scannedData?.cabang,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: getCabangColor(
+                                      qrProvider.scannedData?.cabang,
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Warna Gelang',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ],
@@ -229,4 +243,30 @@ class ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
       ),
     );
   }
+}
+
+Widget _rowDetail(String label, String value) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 80, // Atur lebar label agar rata kiri
+          child: Text(
+            '$label:',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 14),
+            softWrap: true,
+          ),
+        ),
+      ],
+    ),
+  );
 }
