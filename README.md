@@ -61,4 +61,7 @@ For any inquiries or support, please contact:
 - 📸 **Instagram**: [@em_rival](https://instagram.com/em_rival)
 - 🎥 **YouTube**: [@em_rival](https://youtube.com/@em_rival)
 
-![🎓](assets/git/image1.jpeg) ![🎫](assets/git/image2.jpeg) ![📱](assets/git/image3.jpeg) ![✨](assets/git/image4.jpeg)
+### Graduation Ticket Scanner Screens
+| ![📸 Scan QR Screen](assets/git/image1.jpeg) | ![📊 Dashboard Screen](assets/git/image4.jpeg) | ![🎟️ Detail Ticket Screen](assets/git/image2.jpeg) | ![⚙️ Settings Screen](assets/git/image3.jpeg) |
+| :------------------------------------------: | :--------------------------------------------: | :------------------------------------------------: | :--------------------------------------------: |
+|          **📸 Scan QR Screen**               |          **📊 Dashboard Screen**              |          **🎟️ Detail Ticket Screen**             |          **⚙️ Settings Screen**              |
