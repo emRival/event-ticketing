@@ -14,8 +14,10 @@ const Map<String, Color> _cabangColorMap = {
   'smpn idn solo': Color(0xFFAB00FA),
   'smk rpl idn solo': Color(0xFFAB00FA),
   'smk tkj idn solo': Color(0xFFAB00FA),
-  'guru idn ikhwan': Color(0xFF1E5194),
-  'guru idn akhwat': Color(0xFF56008F),
+  'idn jonggol': Color(0xFF1E5194),
+  'idn pamijahan': Color(0xFF1E5194),
+  'idn solo': Color(0xFF1E5194),
+  'idn akhwat': Color(0xFF56008F),
 };
 
 Color getCabangColor(String? cabang) {
