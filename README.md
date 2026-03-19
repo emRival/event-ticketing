@@ -13,7 +13,8 @@
 
 ### 📥 Download the App Now
 
-[![Download Android APK](https://img.shields.io/badge/-Download_APK_(Android)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/emRival/event-ticketing/releases/latest/download/IDN-Ticket-Scanner.apk)
+[![Download Android APK (Modern)](https://img.shields.io/badge/-Download_APK_(Modern_Android)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/emRival/event-ticketing/releases/latest/download/IDN-Ticket-Scanner.apk)
+[![Download Android APK (Lite)](https://img.shields.io/badge/-Download_APK_(Older_Androids)-4CAF50?style=for-the-badge&logo=android&logoColor=white)](https://github.com/emRival/event-ticketing/releases/latest/download/IDN-Ticket-Scanner-Lite-v7a.apk)
 [![Download macOS DMG](https://img.shields.io/badge/-Download_DMG_(macOS)-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/emRival/event-ticketing/releases/latest/download/IDN-Ticket-Scanner-macOS.dmg)
 <br>
 [![Open Web Version](https://img.shields.io/badge/-Open_Web_Version-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://emRival.github.io/event-ticketing/)
