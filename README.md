@@ -57,6 +57,20 @@ The app shines in its **Offline Mode** capability—functioning perfectly withou
 
 ---
 
+## 💻 Installation & Usage
+
+### 🍏 macOS Users
+Because this app is not distributed through the Mac App Store, macOS Gatekeeper might block the initial launch. Follow these steps:
+1. Double click the `.dmg` file to open it.
+2. Drag the **IDN Ticket Scanner.app** into the **Applications** folder shortcut.
+3. Open your Applications folder, **Right-Click** on `IDN Ticket Scanner.app` and choose **"Open"**. 
+   *(If prompted by a security warning, click "Open" or go to System Settings > Privacy & Security > "Open Anyway").*
+
+### 🤖 Android Users
+Simply download the appropriate `.apk` file for your device architecture and install it. If prompted, allow "Install from Unknown Sources" in your Android settings.
+
+---
+
 ## 💻 Developer Setup
 Looking to build locally? Follow these steps:
 
