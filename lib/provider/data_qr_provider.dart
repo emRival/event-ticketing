@@ -74,7 +74,13 @@ class DataQrProvider with ChangeNotifier {
 
   List<HiveGetTicketingResponse> get getQrDataListRedeemed =>
       qrDataList
-          .where((qr) => qr.status && qr.nama!.contains(_searchQuery))
+          .where(
+            (qr) =>
+                qr.status &&
+                (qr.nama ?? '').toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ),
+          )
           .toList();
 
   // Menambahkan data ke Hive

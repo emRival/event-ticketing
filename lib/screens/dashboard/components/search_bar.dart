@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MySearchBar extends StatelessWidget {
   final ValueChanged<String> onSearch;
@@ -6,34 +7,36 @@ class MySearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: TextField(
         onChanged: onSearch,
-        style: const TextStyle(fontSize: 14),
+        style: GoogleFonts.poppins(fontSize: 14),
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 14,
           ),
-          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-          hintText: 'Cari QR Code...',
-          hintStyle: const TextStyle(
-            color: Colors.grey,
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          hintText: 'Cari berdasarkan nama...',
+          hintStyle: GoogleFonts.poppins(
+            color: Colors.grey.shade400,
             fontWeight: FontWeight.w400,
+            fontSize: 14,
           ),
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
         ),
       ),
     );

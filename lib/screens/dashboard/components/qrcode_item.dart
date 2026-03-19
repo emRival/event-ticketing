@@ -22,7 +22,7 @@ class QRListItem extends StatefulWidget {
 }
 
 class _QRListItemState extends State<QRListItem> {
-  final GlobalKey _qrKeyForShare = GlobalKey(); // Untuk share
+  final GlobalKey _qrKeyForShare = GlobalKey();
 
   Future<void> _shareQrImage() async {
     try {
@@ -72,14 +72,8 @@ Terima kasih 🙏
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 12,
-                  offset: Offset(0, 6),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.grey.shade200),
             ),
             child: QrImageView(
               data: widget.qr.id ?? '-',
@@ -90,7 +84,7 @@ Terima kasih 🙏
           ),
         ),
 
-        // Untuk keperluan share
+        // Hidden widget for share capture
         Positioned(
           left: -9999,
           top: -9999,
@@ -102,7 +96,6 @@ Terima kasih 🙏
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -120,7 +113,7 @@ Terima kasih 🙏
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: const Color(0xFF111827),
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -143,9 +136,9 @@ Widget _buildBadge(String label, Color color) {
     constraints: const BoxConstraints(maxWidth: 200),
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
     decoration: BoxDecoration(
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       border: Border.all(color: color, width: 1),
-      borderRadius: BorderRadius.circular(50),
+      borderRadius: BorderRadius.circular(8),
     ),
     child: Text(
       label,

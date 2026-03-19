@@ -8,6 +8,7 @@ import 'package:event_ticketing/screens/dashboard/components/search_bar.dart';
 import 'package:event_ticketing/screens/dashboard/settings_page.dart';
 import 'package:event_ticketing/screens/scanner/scanner_page.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -38,98 +39,151 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Dashboard'),
+        title: Text(
+          'Dashboard',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        ),
         automaticallyImplyLeading: false,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        backgroundColor: Colors.white,
-        centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.settings),
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Pengaturan',
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SettingScreen()),
+                MaterialPageRoute(builder: (context) => const SettingScreen()),
               );
             },
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: FutureBuilder<List<HiveGetTicketingResponse>>(
         future: futureTickets,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.blueAccent),
+            return Center(
+              child: CircularProgressIndicator(color: colorScheme.primary),
             );
           } else if (snapshot.hasError) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.wifi_off_outlined, size: 100),
-                    const SizedBox(height: 20),
-                    Text(
-                      "Terjadi kesalahan: ${snapshot.error}",
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: fetchTickets,
-                      child: const Text("Coba Lagi"),
-                    ),
-                  ],
+                padding: const EdgeInsets.all(32.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.wifi_off_outlined,
+                        size: 72,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Terjadi Kesalahan",
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "${snapshot.error}",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: fetchTickets,
+                        icon: const Icon(Icons.refresh, size: 18),
+                        label: const Text("Coba Lagi"),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text("Tidak ada data tiket"));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.inbox_outlined,
+                    size: 64,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "Tidak ada data tiket",
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
           return FutureBuilder(
-            future:
-                context
-                    .read<DataQrProvider>()
-                    .initCompleter
-                    .future, // Menunggu inisialisasi Hive
+            future: context.read<DataQrProvider>().initCompleter.future,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(
-                  child: CircularProgressIndicator(),
-                ); // Menampilkan loading saat Hive belum siap
+                  child: CircularProgressIndicator(
+                    color: colorScheme.primary,
+                  ),
+                );
               }
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Consumer<DataQrProvider>(
-                  builder:
-                      (context, provider, _) => Column(
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 700),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 12.0,
+                    ),
+                    child: Consumer<DataQrProvider>(
+                      builder: (context, provider, _) => Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Scan QR Button
                           Center(
                             child: GestureDetector(
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ScannerPage(),
+                                    builder: (context) => ScannerPage(email: widget.email),
                                   ),
                                 );
                               },
-                              child: ScanQRButton(),
+                              child: const ScanQRButton(),
                             ),
                           ),
+                          const SizedBox(height: 4),
+
+                          // Search Bar
                           MySearchBar(
                             onSearch: (query) {
                               provider.setSearchQuery = query;
                             },
                           ),
+                          const SizedBox(height: 8),
+
+                          // Unredeem section
                           HeaderExpandableList(
                             title: 'Unredeem QR Codes',
+                            count: provider.getQrDataListNotRedeemed.length,
                             isExpanded: provider.getShowRegistered,
                             onTap: () {
                               if (provider.getShowRedeemed) {
@@ -143,14 +197,16 @@ class _DashboardPageState extends State<DashboardPage> {
                             Expanded(
                               child: QRList(
                                 qrList: provider.getQrDataListNotRedeemed,
-
                                 onEdit: (id) {
                                   provider.redeemScannedQR(id);
                                 },
                               ),
                             ),
+
+                          // Redeemed section
                           HeaderExpandableList(
                             title: 'Redeemed QR Codes',
+                            count: provider.getQrDataListRedeemed.length,
                             isExpanded: provider.getShowRedeemed,
                             onTap: () {
                               if (provider.getShowRegistered) {
@@ -169,9 +225,11 @@ class _DashboardPageState extends State<DashboardPage> {
                                 },
                               ),
                             ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 8),
                         ],
                       ),
+                    ),
+                  ),
                 ),
               );
             },

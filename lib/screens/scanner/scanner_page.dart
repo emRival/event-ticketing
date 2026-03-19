@@ -2,36 +2,84 @@ import 'dart:async';
 
 import 'package:event_ticketing/utils/utils.dart';
 import 'package:flutter/material.dart';
-
+import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
-import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 import 'package:event_ticketing/provider/data_qr_provider.dart';
 
 class ScannerPage extends StatefulWidget {
-  const ScannerPage({super.key});
+  final String email;
+  const ScannerPage({super.key, required this.email});
 
   @override
   ScannerPageState createState() => ScannerPageState();
 }
 
 class ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  late QRViewController controller;
-  Timer? _clearDataTimer; // Timer untuk menghapus data
-  bool isFlashOn = false;
+  final MobileScannerController _controller = MobileScannerController(
+    autoStart: false,
+    formats: [BarcodeFormat.qrCode],
+  );
+  StreamSubscription<Object?>? _subscription;
+  Timer? _clearDataTimer;
+  bool _isStarted = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _startScanner();
+  }
+
+  Future<void> _startScanner() async {
+    _subscription = _controller.barcodes.listen(_handleBarcode);
+    await _controller.start();
+    if (mounted) {
+      setState(() => _isStarted = true);
+    }
+  }
+
+  void _handleBarcode(BarcodeCapture capture) {
+    for (final barcode in capture.barcodes) {
+      if (barcode.rawValue != null && barcode.rawValue!.isNotEmpty) {
+        context.read<DataQrProvider>().processScannedQR(barcode.rawValue!);
+        _resetClearDataTimer();
+        break;
+      }
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!_controller.value.hasCameraPermission) return;
+
+    switch (state) {
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.paused:
+        unawaited(_subscription?.cancel());
+        _subscription = null;
+        unawaited(_controller.stop());
+        break;
+      case AppLifecycleState.resumed:
+        _subscription = _controller.barcodes.listen(_handleBarcode);
+        unawaited(_controller.start());
+        break;
+      case AppLifecycleState.inactive:
+        unawaited(_subscription?.cancel());
+        _subscription = null;
+        unawaited(_controller.stop());
+        break;
+    }
   }
 
   @override
   void dispose() {
-    // ignore: deprecated_member_use
-    controller.dispose();
-    _clearDataTimer?.cancel(); // Hentikan timer jika ada
     WidgetsBinding.instance.removeObserver(this);
+    unawaited(_subscription?.cancel());
+    _subscription = null;
+    _clearDataTimer?.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -44,7 +92,7 @@ class ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
   }
 
   void _resetClearDataTimer() {
-    _clearDataTimer?.cancel(); // Hentikan timer sebelumnya
+    _clearDataTimer?.cancel();
     _clearDataTimer = Timer(const Duration(seconds: 20), () {
       if (mounted) {
         context.read<DataQrProvider>().clearScannedData();
@@ -55,218 +103,310 @@ class ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final qrProvider = context.watch<DataQrProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWide = screenWidth > 700;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan QR Code'),
-        centerTitle: true,
-        backgroundColor: Colors.blueAccent,
-        elevation: 0,
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Scan QR Code',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+            Text(
+              widget.email,
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          // Toggle torch
+          IconButton(
+            icon: ValueListenableBuilder(
+              valueListenable: _controller,
+              builder: (context, state, child) {
+                return Icon(
+                  state.torchState == TorchState.on
+                      ? Icons.flash_on_rounded
+                      : Icons.flash_off_rounded,
+                  color: colorScheme.primary,
+                );
+              },
+            ),
+            tooltip: 'Flash',
+            onPressed: () => _controller.toggleTorch(),
+          ),
+          // Switch camera
+          IconButton(
+            icon: Icon(
+              Icons.cameraswitch_rounded,
+              color: colorScheme.primary,
+            ),
+            tooltip: 'Ganti Kamera',
+            onPressed: () => _controller.switchCamera(),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            flex: 4,
-            child: Stack(
+      body: isWide
+          ? _buildWideLayout(qrProvider, colorScheme)
+          : _buildNarrowLayout(qrProvider, colorScheme),
+    );
+  }
+
+  Widget _buildWideLayout(DataQrProvider qrProvider, ColorScheme colorScheme) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 5,
+          child: _buildScannerView(colorScheme),
+        ),
+        Expanded(
+          flex: 4,
+          child: _buildResultPanel(qrProvider, colorScheme),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNarrowLayout(
+      DataQrProvider qrProvider, ColorScheme colorScheme) {
+    return Column(
+      children: [
+        Expanded(
+          flex: 4,
+          child: _buildScannerView(colorScheme),
+        ),
+        Expanded(
+          flex: 3,
+          child: _buildResultPanel(qrProvider, colorScheme),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScannerView(ColorScheme colorScheme) {
+    return Stack(
+      children: [
+        MobileScanner(controller: _controller),
+        // Overlay frame
+        if (_isStarted)
+          Center(
+            child: Container(
+              width: MediaQuery.of(context).size.shortestSide * 0.55,
+              height: MediaQuery.of(context).size.shortestSide * 0.55,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: colorScheme.primary,
+                  width: 3,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildResultPanel(DataQrProvider qrProvider, ColorScheme colorScheme) {
+    final hasInvalid = qrProvider.scanStatus.contains('Invalid');
+    final hasRedeemed = qrProvider.scanStatus.contains('redeemed');
+
+    Color statusColor;
+    Color statusBg;
+    IconData statusIcon;
+
+    if (hasInvalid) {
+      statusColor = const Color(0xFFDC2626);
+      statusBg = const Color(0xFFFEF2F2);
+      statusIcon = Icons.error_outline;
+    } else if (hasRedeemed) {
+      statusColor = const Color(0xFFF59E0B);
+      statusBg = const Color(0xFFFFFBEB);
+      statusIcon = Icons.info_outline;
+    } else {
+      statusColor = const Color(0xFF16A34A);
+      statusBg = const Color(0xFFF0FDF4);
+      statusIcon = Icons.check_circle_outline;
+    }
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 500),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                QRView(
-                  key: qrKey,
-                  onQRViewCreated: (controller) {
-                    this.controller = controller;
-                    controller.scannedDataStream.listen((scanData) {
-                      if (scanData.code != null) {
-                        context.read<DataQrProvider>().processScannedQR(
-                          scanData.code!,
-                        );
-                        _resetClearDataTimer();
-                      }
-                    });
-                  },
-                  overlay: QrScannerOverlayShape(
-                    borderColor: Colors.blueAccent,
-                    borderRadius: 10,
-                    borderLength: 30,
-                    borderWidth: 10,
-                    cutOutSize: MediaQuery.of(context).size.width * 0.8,
-                  ),
-                ),
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: IconButton(
-                    icon: Icon(
-                      isFlashOn ? Icons.flash_on : Icons.flash_off,
-                      color: Colors.white,
-                      size: 30,
+                if (qrProvider.scannedData != null) ...[
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: BorderSide(
+                        color: statusColor.withValues(alpha: 0.3),
+                      ),
                     ),
-                    onPressed: () async {
-                      await controller.toggleFlash();
-                      bool? flashStatus = await controller.getFlashStatus();
-                      setState(() {
-                        isFlashOn = flashStatus ?? false;
-                      });
-                    },
+                    color: statusBg,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildDetailRow(
+                            'No Kursi',
+                            qrProvider.scannedData!.nokursi ?? '-',
+                          ),
+                          _buildDetailRow(
+                            'Nama',
+                            qrProvider.scannedData!.nama,
+                          ),
+                          _buildDetailRow(
+                            'Cabang',
+                            qrProvider.scannedData!.cabang,
+                          ),
+                          if (qrProvider.scannedData!.jam != null &&
+                              qrProvider.scannedData!.jam!.isNotEmpty)
+                            _buildDetailRow(
+                              'Jam',
+                              qrProvider.scannedData!.jam ?? '-',
+                            ),
+                          const SizedBox(height: 14),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: getCabangColor(
+                                qrProvider.scannedData?.cabang,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              'Warna Gelang',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                ],
+
+                // Status message
+                if (qrProvider.scanStatus.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusBg,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: statusColor.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(statusIcon, color: statusColor, size: 20),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            qrProvider.scanStatus,
+                            style: GoogleFonts.poppins(
+                              color: statusColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 16),
+
+                // Redeem Button
+                if (qrProvider.showRedeemButton)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => qrProvider.redeemScannedQR(
+                        qrProvider.scannedData!.id,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        minimumSize: const Size(double.infinity, 48),
+                      ),
+                      icon: const Icon(
+                        Icons.check_circle_rounded,
+                        size: 22,
+                        color: Colors.white,
+                      ),
+                      label: Text(
+                        'Redeem Now',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-          // Bagian tampilan hasil scan tetap sama
-          Expanded(
-            flex: 3,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (qrProvider.scannedData != null)
-                      Card(
-                        elevation: 5,
-                        color:
-                            qrProvider.scanStatus.contains('Invalid')
-                                ? Colors.red
-                                : (qrProvider.scanStatus.contains('redeemed')
-                                    ? Colors.orange.shade100
-                                    : Colors.green.shade100),
-                        margin: const EdgeInsets.symmetric(vertical: 10),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _rowDetail(
-                                'No Kursi',
-                                qrProvider.scannedData!.nokursi ?? '-',
-                              ),
-                              _rowDetail(
-                                'Nama',
-                                qrProvider.scannedData!.nama,
-                              ),
-                              _rowDetail(
-                                'Cabang',
-                                qrProvider.scannedData!.cabang,
-                              ),
-                              if (qrProvider.scannedData!.jam != null &&
-                                  qrProvider.scannedData!.jam!.isNotEmpty)
-                                _rowDetail(
-                                  'Jam',
-                                  qrProvider.scannedData!.jam ?? '-',
-                                ),
-                              const SizedBox(height: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: getCabangColor(
-                                    qrProvider.scannedData?.cabang,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: getCabangColor(
-                                      qrProvider.scannedData?.cabang,
-                                    ),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Warna Gelang',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    if (qrProvider.scanStatus.isNotEmpty)
-                      const SizedBox(height: 10),
-                    Text(
-                      qrProvider.scanStatus,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color:
-                            qrProvider.scanStatus.contains('Invalid')
-                                ? Colors.red
-                                : (qrProvider.scanStatus.contains('redeemed')
-                                    ? Colors.orange
-                                    : Colors.green),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    if (qrProvider.showRedeemButton)
-                      ElevatedButton.icon(
-                        onPressed:
-                            () => qrProvider.redeemScannedQR(
-                              qrProvider.scannedData!.id,
-                            ),
-                        icon: const Icon(
-                          Icons.cut_sharp,
-                          size: 24,
-                          color: Colors.white,
-                        ),
-                        label: const Text(
-                          'Redeem Now',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 30,
-                            vertical: 15,
-                          ),
-                          backgroundColor: Colors.blueAccent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          elevation: 5,
-                        ),
-                      ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 90,
+            child: Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: Colors.grey.shade700,
               ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.poppins(fontSize: 13),
+              softWrap: true,
             ),
           ),
         ],
       ),
     );
   }
-}
-
-Widget _rowDetail(String label, String value) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 80, // Atur lebar label agar rata kiri
-          child: Text(
-            '$label:',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 14),
-            softWrap: true,
-          ),
-        ),
-      ],
-    ),
-  );
 }
